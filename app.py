@@ -45,9 +45,13 @@ if "edit_messages" not in st.session_state:
     st.session_state.edit_messages = []
 if "last_edit_summary" not in st.session_state:
     st.session_state.last_edit_summary = []
+if "openai_api_key_override" not in st.session_state:
+    st.session_state.openai_api_key_override = ""
 
 
 def get_openai_key():
+    if st.session_state.openai_api_key_override:
+        return st.session_state.openai_api_key_override
     secret = get_secret("OPENAI_API_KEY")
     if secret:
         return secret
@@ -244,6 +248,16 @@ def summarize_changes(before, after):
 
 with st.sidebar:
     st.header("입력 정보")
+    st.subheader("API 키 (선택)")
+    openai_key_input = st.text_input(
+        "OpenAI API Key",
+        type="password",
+        value=st.session_state.openai_api_key_override,
+        help="로컬 테스트용 입력칸입니다. 비워두면 .env 또는 st.secrets 값을 사용합니다.",
+    )
+    st.session_state.openai_api_key_override = openai_key_input.strip()
+    st.divider()
+
     trip_type = st.radio("여행 유형", ["국내", "해외"], horizontal=True)
     start_city = st.text_input("출발 지역", placeholder="예: 서울, 부산, 인천")
     days_nights = st.selectbox("일정", ["당일", "1박2일", "2박3일", "3박4일"])
