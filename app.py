@@ -47,6 +47,8 @@ if "last_edit_summary" not in st.session_state:
     st.session_state.last_edit_summary = []
 if "openai_api_key_override" not in st.session_state:
     st.session_state.openai_api_key_override = ""
+if "last_generation_error" not in st.session_state:
+    st.session_state.last_generation_error = ""
 
 
 def get_openai_key():
@@ -293,6 +295,9 @@ with st.sidebar:
                 except ValueError as error:
                     st.error(str(error))
                     itinerary = None
+                    st.session_state.last_generation_error = str(error)
+                else:
+                    st.session_state.last_generation_error = ""
             st.session_state.current_itinerary = itinerary
             st.session_state.last_edit_summary = []
 
@@ -317,6 +322,8 @@ if current:
     rows = itinerary_to_dataframe(current)
     if rows:
         st.dataframe(rows, use_container_width=True)
+    else:
+        st.warning("추천 일정표 데이터가 비어 있습니다. 다시 추천을 받아주세요.")
 
     st.subheader("지도 링크")
     for day_entry in current.get("itinerary", []):
@@ -406,4 +413,10 @@ if current:
 elif st.session_state.saved_itineraries:
     st.info("저장된 루트를 보려면 새 루트를 추천받아 주세요.")
 else:
-    st.info("왼쪽에서 여행 조건을 입력하고 루트를 추천받아 주세요.")
+    if st.session_state.last_generation_error:
+        st.error(
+            "루트 생성 중 오류가 발생했습니다. 입력한 API 키와 네트워크 상태를 확인해주세요."
+        )
+        st.caption(st.session_state.last_generation_error)
+    else:
+        st.info("왼쪽에서 여행 조건을 입력하고 루트를 추천받아 주세요.")
